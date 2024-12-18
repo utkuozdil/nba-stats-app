@@ -1,0 +1,45 @@
+service: nba-stats-app
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource: "arn:aws:s3:::daily-nba-game-results/*"
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-python-requirements
+
+functions:
+  saveDailyResultsBDL:
+    handler: src/handlers/save_daily_results_bdl.handler
+    events:
+      - schedule:
+          rate: cron(0 10 * * ? *)
+custom:
+  pythonRequirements:
+    dockerizePip: true    # Ensures compatibility with Lambda runtime
+    slim: true            # Reduces package size
+    strip: false          # Keep debug symbols for better error logs
+
+package:
+  exclude:
+    - node_modules/**
+    - venv/**             # Exclude virtual environment
+    - .pytest_cache/**    # Exclude pytest cache
+    - tests/**            # Exclude tests
+  include:
+    - src/**              # Include application source files
+    - requirements.txt
+
+resources:
+  Resources:
+    NBAStatsS3Bucket:    # Logical resource name
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: daily-nba-game-results  # S3 bucket name
