@@ -1,0 +1,62 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+env/
+venv/
+ENV/
+*.egg-info/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Serverless Framework
+.serverless/
+package-lock.json
+
+# AWS credentials (do not commit!)
+.aws/
+
+# LocalStack (for local AWS testing)
+localstack/
+*.localstack/
+
+# Logs and debug files
+*.log
+debug.log
+*.out
+
+# Docker
+docker-compose.override.yml
+docker-compose.yml
+.dockerignore
+
+# Testing
+.coverage
+nosetests.xml
+test-results/
+pytest_cache/
+.tox/
+dist/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.sublime-workspace
+
+# Python dependency files
+Pipfile
+Pipfile.lock
+
+# Swagger UI and generated docs
+docs/swagger.json
+swagger_output/
+
+# Misc
+.DS_Store
+Thumbs.db
+.env
+node_modules/
