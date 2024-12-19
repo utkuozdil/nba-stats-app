@@ -21,6 +21,11 @@ functions:
     events:
       - schedule:
           rate: cron(0 10 * * ? *)
+  saveDailyResultsNbaAPI:
+    handler: src/handlers/save_daily_results_nba_api.handler
+    events:
+      - schedule:
+          rate: cron(0 10 * * ? *)
 custom:
   pythonRequirements:
     dockerizePip: true    # Ensures compatibility with Lambda runtime
