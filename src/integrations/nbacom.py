@@ -11,5 +11,4 @@ class NbaCom:
     def get_games(self, date: str):
         games = self.scoreboardAPI.ScoreboardV2(game_date=date)
         raw_json = games.get_json()
-        formatted_json = json.loads(raw_json)
-        return formatted_json
+        return raw_json

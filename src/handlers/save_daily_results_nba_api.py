@@ -16,4 +16,3 @@ def handler(_event, _context):
         s3.upload_to_bucket(data=games, key=f"{yesterday_iso_format}/nba-api.json")
     except Exception as e:
         print(f"Error handling request: {str(e)}")
-
