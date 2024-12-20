@@ -19,7 +19,7 @@ def handler(_event, _context):
         sns_message = {
             "source": "NBA_API",
             "date": yesterday_iso_format,
-            "s3_key": f"{yesterday_iso_format}/bdl.json"
+            "s3_key": f"{yesterday_iso_format}/nba-api.json"
         }
         sns.publish_to_topic(message=sns_message, source="NBA_API")
     except Exception as e:
