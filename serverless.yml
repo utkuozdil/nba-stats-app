@@ -25,6 +25,8 @@ provider:
           Action:
             - dynamodb:PutItem
             - dynamodb:BatchWriteItem
+            - dynamodb:GetItem
+            - dynamodb:DeleteItem
           Resource: "*"
         - Effect: Allow
           Action:
