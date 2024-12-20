@@ -1,4 +1,5 @@
 import json
+import traceback
 
 from src.services.dynamodb import DynamoDB
 from src.services.s3 import S3
@@ -20,4 +21,5 @@ def handler(event, context):
             extracted_games = nba_api_data_extractor.extract_game_data()
             dynamodb.save_batch(data=extracted_games)
         except Exception as e:
+            traceback.print_exc()
             print(f"Error processing message: {str(e)}")

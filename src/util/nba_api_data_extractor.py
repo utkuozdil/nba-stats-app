@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from src.model.game import Game
@@ -8,7 +9,7 @@ from src.util.constant import nba_divisions
 class NBAAPIDataExtractor:
 
     def __init__(self, data):
-        self.data = data
+        self.data = json.loads(data)
 
     def extract_game_data(self):
         extracted_games = []
