@@ -21,9 +21,7 @@ class DynamoDB:
             print(f"Error retrieving item: {str(e)}")
             raise
 
-    def delete_item(self, key: dict):
-        try:
-            self.table.delete_item(Key=key)
-        except ClientError as e:
-            print(f"Error retrieving item: {str(e)}")
-            raise
+    def delete_batch(self, data):
+        with self.table.batch_writer() as batch:
+            for game in data:
+                batch.delete_item(Key={"game_id": game.game_id, "date": game.date})

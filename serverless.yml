@@ -38,12 +38,12 @@ plugins:
   - serverless-python-requirements
 
 functions:
-  saveDailyResultsBDL:
-    handler: src/handlers/save_daily_results_bdl.handler
-    timeout: 15
-    events:
-      - schedule:
-          rate: cron(0 10 * * ? *)
+#  saveDailyResultsBDL:
+#    handler: src/handlers/save_daily_results_bdl.handler
+#    timeout: 15
+#    events:
+#      - schedule:
+#          rate: cron(0 10 * * ? *)
 
   processBDLGame:
     handler: src/handlers/process_bdl_game_data.handler
@@ -197,3 +197,4 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: NormalizeGameQueue
+        VisibilityTimeout: 10
