@@ -14,10 +14,12 @@ provider:
         - Effect: Allow
           Action:
             - s3:PutObject
+            - s3:GetObject
           Resource: "*"
         - Effect: Allow
           Action:
             - dynamodb:PutItem
+            - dynamodb:BatchWriteItem
           Resource: "*"
         - Effect: Allow
           Action:
