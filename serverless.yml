@@ -7,13 +7,18 @@ provider:
   environment:
     SNS_TOPIC_ARN:
       Ref: FanoutTopic
+    GAME_TABLE_NAME: GameResults
   iam:
     role:
       statements:
         - Effect: Allow
           Action:
             - s3:PutObject
-          Resource: "arn:aws:s3:::daily-nba-game-results/*"
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+          Resource: "*"
         - Effect: Allow
           Action:
             - sqs:*
@@ -37,6 +42,14 @@ functions:
     events:
       - schedule:
           rate: cron(0 10 * * ? *)
+
+  processBDLGame:
+    handler: src/handlers/process_bdl_game_data.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [ BDLGameQueue, Arn ]
+          batchSize: 5
 custom:
   pythonRequirements:
     dockerizePip: true    # Ensures compatibility with Lambda runtime
@@ -123,7 +136,7 @@ resources:
       Type: AWS::SQS::QueuePolicy
       Properties:
         Queues:
-          - Ref: NBAAPIQueue
+          - Ref: NBAAPIGameQueue
         PolicyDocument:
           Version: "2012-10-17"
           Statement:
@@ -131,8 +144,20 @@ resources:
               Principal: "*"
               Action: "sqs:SendMessage"
               Resource:
-                Fn::GetAtt: [ NBAAPIQueue, Arn ]
+                Fn::GetAtt: [ NBAAPIGameQueue, Arn ]
               Condition:
                 ArnEquals:
                   aws:SourceArn:
                     Ref: FanoutTopic
+
+    GameResultsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: GameResults
+        AttributeDefinitions:
+          - AttributeName: game_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: game_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST

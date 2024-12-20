@@ -9,3 +9,12 @@ class S3:
 
     def upload_to_bucket(self, data, key):
         self.s3_client.put_object(Bucket=self.bucket_name, Key=key, Body=data)
+
+    def retrieve_data_from_bucket(self, key):
+        try:
+            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=key)
+            content = response['Body'].read().decode('utf-8')
+            return content
+        except Exception as e:
+            print(f"Error fetching object from S3: {str(e)}")
+            return None
