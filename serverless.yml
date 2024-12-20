@@ -4,6 +4,9 @@ provider:
   name: aws
   runtime: python3.11
   region: us-east-1
+  environment:
+    SNS_TOPIC_ARN:
+      Ref: FanoutTopic
   iam:
     role:
       statements:
@@ -11,6 +14,11 @@ provider:
           Action:
             - s3:PutObject
           Resource: "arn:aws:s3:::daily-nba-game-results/*"
+        - Effect: Allow
+          Action:
+            - sqs:*
+            - sns:*
+          Resource: "*"
 plugins:
   - serverless-dotenv-plugin
   - serverless-python-requirements
@@ -18,11 +26,14 @@ plugins:
 functions:
   saveDailyResultsBDL:
     handler: src/handlers/save_daily_results_bdl.handler
+    timeout: 15
     events:
       - schedule:
           rate: cron(0 10 * * ? *)
+
   saveDailyResultsNbaAPI:
     handler: src/handlers/save_daily_results_nba_api.handler
+    timeout: 15
     events:
       - schedule:
           rate: cron(0 10 * * ? *)
@@ -48,3 +59,80 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: daily-nba-game-results  # S3 bucket name
+    # SNS Topic
+    FanoutTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: FanoutTopic
+
+    # SQS Queues
+    BDLGameQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: BDLGameQueue
+    NBAAPIGameQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: NBAAPIGameQueue
+
+    # SQS Subscriptions to SNS
+    BDLGameQueueSub:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn:
+          Ref: FanoutTopic
+        Protocol: sqs
+        Endpoint:
+          Fn::GetAtt: [ BDLGameQueue, Arn ]
+        FilterPolicy:
+          source:
+            - BallDontLie
+
+    NBAAPIQueueSub:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn:
+          Ref: FanoutTopic
+        Protocol: sqs
+        Endpoint:
+          Fn::GetAtt: [ NBAAPIGameQueue, Arn ]
+        FilterPolicy:
+          source:
+            - NBA_API
+
+    # Allow SQS to Receive Messages from SNS
+    BDLGameQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - Ref: BDLGameQueue
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: "*"
+              Action: "sqs:SendMessage"
+              Resource:
+                Fn::GetAtt: [ BDLGameQueue, Arn ]
+              Condition:
+                ArnEquals:
+                  aws:SourceArn:
+                    Ref: FanoutTopic
+
+    NBAAPIQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - Ref: NBAAPIQueue
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: "*"
+              Action: "sqs:SendMessage"
+              Resource:
+                Fn::GetAtt: [ NBAAPIQueue, Arn ]
+              Condition:
+                ArnEquals:
+                  aws:SourceArn:
+                    Ref: FanoutTopic
