@@ -10,6 +10,8 @@ provider:
       Ref: FanoutTopic
     GAME_TABLE_NAME:
           Ref: GameResultsTable
+    NORMALIZE_GAME_QUEUE_URL:
+      Ref: NormalizeGameQueue
 
   iam:
     role:
@@ -55,6 +57,14 @@ functions:
       - sqs:
           arn:
             Fn::GetAtt: [ NBAAPIGameQueue, Arn ]
+          batchSize: 5
+
+  processNormalizeGameResult:
+    handler: src/handlers/process_normalize_game.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [ NormalizeGameQueue, Arn ]
           batchSize: 5
 custom:
   pythonRequirements:
@@ -180,3 +190,8 @@ resources:
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
+
+    NormalizeGameQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: NormalizeGameQueue
