@@ -7,7 +7,6 @@ class Game(BaseModel):
     game_id: str
     date: str
     season: int
-    postseason: bool
     home_team_score: int
     visitor_team_score: int
     home_team: Team

@@ -2,12 +2,12 @@ import json
 
 from src.services.dynamodb import DynamoDB
 from src.services.s3 import S3
-from src.util.bdl_data_extractor import BDLDataExtractor
 from src.util.config import BUCKET_NAME, GAME_TABLE_NAME
 from src.util.nba_api_data_extractor import NBAAPIDataExtractor
 
 s3 = S3(BUCKET_NAME)
 dynamodb = DynamoDB(GAME_TABLE_NAME)
+
 
 def handler(event, context):
     for record in event["Records"]:

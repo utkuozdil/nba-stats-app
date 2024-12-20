@@ -4,10 +4,13 @@ provider:
   name: aws
   runtime: python3.11
   region: us-east-1
+  memorySize: 1024
   environment:
     SNS_TOPIC_ARN:
       Ref: FanoutTopic
-    GAME_TABLE_NAME: GameResults
+    GAME_TABLE_NAME:
+          Ref: GameResultsTable
+
   iam:
     role:
       statements:
@@ -169,7 +172,18 @@ resources:
         AttributeDefinitions:
           - AttributeName: game_id
             AttributeType: S
+          - AttributeName: date
+            AttributeType: S
         KeySchema:
           - AttributeName: game_id
             KeyType: HASH
+          - AttributeName: date
+            KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
+        GlobalSecondaryIndexes:
+          - IndexName: DateIndex
+            KeySchema:
+              - AttributeName: date
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL

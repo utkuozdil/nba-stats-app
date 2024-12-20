@@ -22,7 +22,6 @@ class BDLDataExtractor:
                 home_team=home_team, visitor_team=visitor_team,
                 home_team_score=game_data.get("home_team_score"),
                 visitor_team_score=game_data.get("visitor_team_score"),
-                postseason=game_data.get("postseason"),
                 date=game_data.get("date"),
                 season=game_data.get("season"),
                 game_id=game_id,
@@ -46,4 +45,4 @@ class BDLDataExtractor:
         date = game_data.get("date")
         home_team_abbr = game_data.get("home_team").get("abbreviation")
         visitor_team_abbr = game_data.get("visitor_team").get("abbreviation")
-        return "_".join([date, home_team_abbr, visitor_team_abbr])
+        return "_".join([date, home_team_abbr, visitor_team_abbr, "BallDontLie"])
