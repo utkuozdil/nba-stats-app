@@ -1,5 +1,3 @@
-import json
-
 from nba_api.stats.endpoints import scoreboardv2
 
 
