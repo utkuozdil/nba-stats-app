@@ -52,6 +52,14 @@ functions:
           arn:
             Fn::GetAtt: [ BDLGameQueue, Arn ]
           batchSize: 5
+
+  processNBAAPIGame:
+    handler: src/handlers/process_nba_api_game_data.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [ NBAAPIGameQueue, Arn ]
+          batchSize: 5
 custom:
   pythonRequirements:
     dockerizePip: true    # Ensures compatibility with Lambda runtime
@@ -64,6 +72,8 @@ package:
     - venv/**             # Exclude virtual environment
     - .pytest_cache/**    # Exclude pytest cache
     - tests/**            # Exclude tests
+    - .venv/**
+    - .serverless/**
   include:
     - src/**              # Include application source files
     - requirements.txt
