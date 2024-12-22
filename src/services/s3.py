@@ -18,3 +18,21 @@ class S3:
         except Exception as e:
             print(f"Error fetching object from S3: {str(e)}")
             return None
+
+    def list_files(self):
+        file_names = []
+
+        try:
+            paginator = self.s3_client.get_paginator('list_objects_v2')
+            operation_parameters = {'Bucket': self.bucket_name}
+
+            for page in paginator.paginate(**operation_parameters):
+                if 'Contents' in page:
+                    for obj in page['Contents']:
+                        file_names.append(obj['Key'])
+
+            return file_names
+
+        except Exception as e:
+            print(f"Error retrieving files: {e}")
+            return []

@@ -25,7 +25,6 @@ def compare_items(given_item: Game, other_item: Game):
 
 
 def handler(event, context):
-    print(event)
     for record in event["Records"]:
         try:
             key = json.loads(record["body"])
@@ -33,6 +32,7 @@ def handler(event, context):
             date = array[0]
 
             other_key = get_other_key(key)
+            print(key, other_key)
             other_item = dynamodb.get_item({"game_id": other_key, "date": date})
             if other_item:
                 given_item = dynamodb.get_item({"game_id": key, "date": date})
@@ -42,17 +42,31 @@ def handler(event, context):
 
                 is_equal = compare_items(given_item, other_item)
                 if is_equal:
-                    new_item = given_item.model_copy(deep=True)
-                    dynamodb.delete_batch([given_item, other_item])
-                    new_item.source = "Unified"
-                    new_item.game_id = "_".join([new_item.date,
-                                                 new_item.home_team.abbreviation,
-                                                 new_item.visitor_team.abbreviation,
-                                                 "Unified"])
+                    new_item = generate_unified_data(given_item)
                     dynamodb.save_batch([new_item])
+                    dynamodb.delete_batch([given_item, other_item])
                 else:
-                    raise Exception(f"Data mismatch for game_id: {key}.")
+                    ## In this case, use NBA_API data
+                    selected_item = None
+                    if given_item.source == "NBA_API":
+                        selected_item = given_item
+                    else:
+                        selected_item = other_item
+
+                    new_item = generate_unified_data(selected_item)
+                    dynamodb.save_batch([new_item])
+                    dynamodb.delete_batch([given_item, other_item])
+
 
         except Exception as e:
             traceback.print_exc()
             print(f"Error processing message: {str(e)}")
+
+def generate_unified_data(given_item):
+    new_item = given_item.model_copy(deep=True)
+    new_item.source = "Unified"
+    new_item.game_id = "_".join([new_item.date,
+                                 new_item.home_team.abbreviation,
+                                 new_item.visitor_team.abbreviation,
+                                 "Unified"])
+    return new_item

@@ -12,6 +12,7 @@ provider:
           Ref: GameResultsTable
     NORMALIZE_GAME_QUEUE_URL:
       Ref: NormalizeGameQueue
+    GAME_TABLE_INDEX: DateIndex
 
   iam:
     role:
@@ -20,6 +21,7 @@ provider:
           Action:
             - s3:PutObject
             - s3:GetObject
+            - s3:ListBucket
           Resource: "*"
         - Effect: Allow
           Action:
@@ -27,6 +29,7 @@ provider:
             - dynamodb:BatchWriteItem
             - dynamodb:GetItem
             - dynamodb:DeleteItem
+            - dynamodb:Query
           Resource: "*"
         - Effect: Allow
           Action:

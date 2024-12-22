@@ -1,4 +1,5 @@
 import boto3
+from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 
@@ -19,6 +20,14 @@ class DynamoDB:
             return response.get("Item", None)
         except ClientError as e:
             print(f"Error retrieving item: {str(e)}")
+            raise
+
+    def get_by_date(self, index_name, key, date):
+        try:
+            response = self.table.query(IndexName=index_name, KeyConditionExpression=Key(key).eq(date))
+            return response.get("Items", [])
+        except Exception as e:
+            print(f"Error querying by date: {str(e)}")
             raise
 
     def delete_batch(self, data):
