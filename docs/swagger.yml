@@ -1,0 +1,67 @@
+openapi: 3.0.1
+info:
+  title: NBA Games API
+  description: API for retrieving NBA games by date
+  version: 1.0.0
+paths:
+  /games:
+    get:
+      summary: Get NBA games by date
+      description: Retrieve NBA game results for a given date.
+      parameters:
+        - name: date
+          in: query
+          description: "The date of the games to retrieve (format: YYYY-MM-DD)".
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        200:
+          description: A list of NBA games for the given date.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    game_id:
+                      type: string
+                      description: Unique game identifier.
+                    date:
+                      type: string
+                      format: date
+                      description: Date of the game.
+                    home_team:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        abbreviation:
+                          type: string
+                        conference:
+                          type: string
+                        division:
+                          type: string
+                    visitor_team:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        abbreviation:
+                          type: string
+                        conference:
+                          type: string
+                        division:
+                          type: string
+                    home_team_score:
+                      type: integer
+                      description: Score of the home team.
+                    visitor_team_score:
+                      type: integer
+                      description: Score of the visitor team.
+        400:
+          description: Missing or invalid date query parameter.
+        500:
+          description: Internal server error.
