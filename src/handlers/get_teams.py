@@ -8,6 +8,7 @@ dynamodb = DynamoDB(TEAM_TABLE_NAME)
 
 
 def handler(event, context):
+    print(event)
     try:
         query_params = event.get("queryStringParameters", {})
         season = query_params.get("season")
@@ -49,7 +50,7 @@ def handler(event, context):
             }
 
         teams = dynamodb.get_by_index_value(index_name=index_name, key=key, value=value, sort_key="season",
-                                            sort_value=season)
+                                            sort_value=int(season))
         results = convert_decimals(teams)
 
         return {
