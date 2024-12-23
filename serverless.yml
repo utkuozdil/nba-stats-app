@@ -16,6 +16,8 @@ provider:
       Ref: NormalizeGameQueue
     GAME_TABLE_INDEX: DateIndex
     TEAM_TABLE_NAME_INDEX: TeamNameIndex
+    TEAM_TABLE_CONFERENCE_INDEX: ConferenceIndex
+    TEAM_TABLE_DIVISION_INDEX: DivisionIndex
 
   iam:
     role:
@@ -94,6 +96,13 @@ functions:
           arn:
             Fn::GetAtt: [ GameResultsTable, StreamArn ]
           batchSize: 5
+
+  getTeams:
+    handler: src/handlers/get_teams.handler
+    events:
+      - http:
+          path: teams
+          method: get
 
   
 custom:
