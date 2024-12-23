@@ -1,8 +1,8 @@
 import json
 from datetime import datetime
 
-from src.model.game import Game
-from src.model.team import Team
+from src.model.game.game import Game
+from src.model.game.teamdata import TeamData
 from src.util.constant import nba_divisions
 
 
@@ -105,12 +105,12 @@ class NBAAPIDataExtractor:
         return game_header_map
 
     def _get_team_data(self, selected_line_score, team_data):
-        team = Team(conference=team_data.get("CONFERENCE"),
-                    division=nba_divisions.get(selected_line_score["TEAM_ABBREVIATION"]),
-                    city=selected_line_score["TEAM_CITY_NAME"],
-                    name=selected_line_score["TEAM_NAME"],
-                    full_name=" ".join([selected_line_score["TEAM_CITY_NAME"],
+        team = TeamData(conference=team_data.get("CONFERENCE"),
+                        division=nba_divisions.get(selected_line_score["TEAM_ABBREVIATION"]),
+                        city=selected_line_score["TEAM_CITY_NAME"],
+                        name=selected_line_score["TEAM_NAME"],
+                        full_name=" ".join([selected_line_score["TEAM_CITY_NAME"],
                                         selected_line_score["TEAM_NAME"]]),
-                    abbreviation=selected_line_score["TEAM_ABBREVIATION"]
-                    )
+                        abbreviation=selected_line_score["TEAM_ABBREVIATION"]
+                        )
         return team

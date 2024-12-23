@@ -22,12 +22,15 @@ class DynamoDB:
             print(f"Error retrieving item: {str(e)}")
             raise
 
-    def get_by_date(self, index_name, key, date):
+    def get_by_index_value(self, index_name, key, value, sort_key=None, sort_value=None):
         try:
-            response = self.table.query(IndexName=index_name, KeyConditionExpression=Key(key).eq(date))
+            key_condition = Key(key).eq(value)
+            if sort_key and sort_value:
+                key_condition &= Key(sort_key).eq(sort_value)
+            response = self.table.query(IndexName=index_name, KeyConditionExpression=key_condition)
             return response.get("Items", [])
         except Exception as e:
-            print(f"Error querying by date: {str(e)}")
+            print(f"Error querying by index: {key} {value} {str(e)}")
             raise
 
     def delete_batch(self, data):

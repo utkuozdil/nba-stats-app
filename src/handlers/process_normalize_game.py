@@ -1,7 +1,7 @@
 import json
 import traceback
 
-from src.model.game import Game
+from src.model.game.game import Game
 from src.services.dynamodb import DynamoDB
 from src.util.config import GAME_TABLE_NAME
 

@@ -1,7 +1,7 @@
 import json
 
-from src.model.game import Game
-from src.model.team import Team
+from src.model.game.game import Game
+from src.model.game.teamdata import TeamData
 
 
 class BDLDataExtractor:
@@ -32,13 +32,13 @@ class BDLDataExtractor:
         return extracted_games
 
     def _get_team_data(self, raw_team_data):
-        team = Team(conference=raw_team_data.get("conference"),
-                    division=raw_team_data.get("division"),
-                    city=raw_team_data.get("city"),
-                    name=raw_team_data.get("name"),
-                    full_name=raw_team_data.get("full_name"),
-                    abbreviation=raw_team_data.get("abbreviation")
-                    )
+        team = TeamData(conference=raw_team_data.get("conference"),
+                        division=raw_team_data.get("division"),
+                        city=raw_team_data.get("city"),
+                        name=raw_team_data.get("name"),
+                        full_name=raw_team_data.get("full_name"),
+                        abbreviation=raw_team_data.get("abbreviation")
+                        )
         return team
 
     def _generate_game_id(self, game_data):

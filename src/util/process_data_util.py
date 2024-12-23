@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+
 def filter_games(extracted_games, previously_recorded_games):
     prev_recorded_unified_games = list(
         filter(lambda x: x["source"] == "Unified", previously_recorded_games))
@@ -20,3 +23,15 @@ def generate_game_id(extracted_game, source):
                         source
                         ])
     return game_id
+
+def convert_decimals(obj):
+
+    if isinstance(obj, list):
+        return [convert_decimals(i) for i in obj]
+    elif isinstance(obj, dict):
+        return {k: convert_decimals(v) for k, v in obj.items()}
+    elif isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    else:
+        return obj
+

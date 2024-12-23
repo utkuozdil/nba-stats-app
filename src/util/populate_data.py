@@ -32,12 +32,12 @@ def populate_bdl_data(query_date, end_date_param, file_set):
             time.sleep(6)
         else:
             print(f"{query_date} is already added for BDL")
-            # sns_message = {
-            #     "source": "BallDontLie",
-            #     "date": query_date,
-            #     "s3_key": key
-            # }
-            # sns.publish_to_topic(message=sns_message, source="BallDontLie")
+            sns_message = {
+                "source": "BallDontLie",
+                "date": query_date,
+                "s3_key": key
+            }
+            sns.publish_to_topic(message=sns_message, source="BallDontLie")
 
         query_date = datetime.strptime(query_date, '%Y-%m-%d') + timedelta(days=1)
         query_date = query_date.strftime('%Y-%m-%d')
@@ -60,12 +60,12 @@ def populate_nba_api_data(query_date, end_date_param, file_set):
             time.sleep(1)
         else:
             print(f"{query_date} is already added for NBA API")
-            # sns_message = {
-            #     "source": "NBA_API",
-            #     "date": query_date,
-            #     "s3_key": key
-            # }
-            # sns.publish_to_topic(message=sns_message, source="NBA_API")
+            sns_message = {
+                "source": "NBA_API",
+                "date": query_date,
+                "s3_key": key
+            }
+            sns.publish_to_topic(message=sns_message, source="NBA_API")
 
         query_date = datetime.strptime(query_date, '%Y-%m-%d') + timedelta(days=1)
         query_date = query_date.strftime('%Y-%m-%d')

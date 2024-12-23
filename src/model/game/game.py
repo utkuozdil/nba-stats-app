@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from src.model.team import Team
+from src.model.game.teamdata import TeamData
 
 
 class Game(BaseModel):
@@ -9,6 +9,6 @@ class Game(BaseModel):
     season: int
     home_team_score: int
     visitor_team_score: int
-    home_team: Team
-    visitor_team: Team
+    home_team: TeamData
+    visitor_team: TeamData
     source: str

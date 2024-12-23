@@ -24,8 +24,8 @@ def handler(event, context):
             extracted_games = nba_api_data_extractor.extract_game_data()
             if len(extracted_games) > 0:
                 date = extracted_games[0].date
-                previously_recorded_games = dynamodb.get_by_date(index_name=GAME_TABLE_INDEX,
-                                                                 key="date", date=date)
+                previously_recorded_games = dynamodb.get_by_index_value(index_name=GAME_TABLE_INDEX,
+                                                                        key="date", value=date)
                 filtered_games = filter_games(extracted_games, previously_recorded_games)
                 dynamodb.save_batch(data=filtered_games)
                 for extracted_game in filtered_games:

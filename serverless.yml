@@ -10,9 +10,12 @@ provider:
       Ref: FanoutTopic
     GAME_TABLE_NAME:
           Ref: GameResultsTable
+    TEAM_TABLE_NAME:
+      Ref: TeamsTable
     NORMALIZE_GAME_QUEUE_URL:
       Ref: NormalizeGameQueue
     GAME_TABLE_INDEX: DateIndex
+    TEAM_TABLE_NAME_INDEX: TeamNameIndex
 
   iam:
     role:
@@ -82,6 +85,17 @@ functions:
             parameters:
               querystrings:
                 date: true
+
+  processUnifiedGame:
+    handler: src/handlers/process_unified_game_data.handler
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [ GameResultsTable, StreamArn ]
+          batchSize: 5
+
+  
 custom:
   pythonRequirements:
     dockerizePip: true    # Ensures compatibility with Lambda runtime
@@ -206,9 +220,60 @@ resources:
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
 
     NormalizeGameQueue:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: NormalizeGameQueue
         VisibilityTimeout: 10
+
+
+    TeamsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Teams
+        AttributeDefinitions:
+          - AttributeName: team_id
+            AttributeType: S
+          - AttributeName: season
+            AttributeType: N
+          - AttributeName: team_name
+            AttributeType: S
+          - AttributeName: division
+            AttributeType: S
+          - AttributeName: conference
+            AttributeType: S
+        KeySchema:
+          - AttributeName: team_id
+            KeyType: HASH
+          - AttributeName: season
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: TeamNameIndex
+            KeySchema:
+              - AttributeName: team_name
+                KeyType: HASH
+              - AttributeName: season
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: DivisionIndex
+            KeySchema:
+              - AttributeName: division
+                KeyType: HASH
+              - AttributeName: season
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: ConferenceIndex
+            KeySchema:
+              - AttributeName: conference
+                KeyType: HASH
+              - AttributeName: season
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+

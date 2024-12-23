@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class Team(BaseModel):
+class TeamData(BaseModel):
     conference: str
     division: str
     city: str

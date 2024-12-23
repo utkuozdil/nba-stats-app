@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta
-
 from src.integrations.nbacom import NbaCom
 from src.services.s3 import S3
 from src.services.sns import SNS
