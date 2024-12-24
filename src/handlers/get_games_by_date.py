@@ -1,11 +1,12 @@
 import json
 from src.services.dynamodb import DynamoDB
 from src.util.config import GAME_TABLE_NAME, GAME_TABLE_INDEX
+from src.util.cors_decorator import cors
 from src.util.process_data_util import convert_decimals
 
 dynamodb = DynamoDB(GAME_TABLE_NAME)
 
-
+@cors(origin="*")
 def handler(event, context):
     try:
         query_params = event.get("queryStringParameters", {})
@@ -17,7 +18,7 @@ def handler(event, context):
                 "body": json.dumps({"error": "Missing 'date' query parameter."})
             }
 
-        games = dynamodb.get_by_index_value(index_name=GAME_TABLE_INDEX, key="date", date=date)
+        games = dynamodb.get_by_index_value(index_name=GAME_TABLE_INDEX, key="date", value=date)
         results = prepare_results(convert_decimals(games))
         return {
             "statusCode": 200,

@@ -1,3 +1,5 @@
+from typing import Set
+
 from pydantic import BaseModel
 
 
@@ -13,3 +15,4 @@ class Team(BaseModel):
     game_count: int
     win_count: int
     loss_count: int
+    game_ids: Set[str] = set()

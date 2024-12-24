@@ -2,11 +2,12 @@ import json
 from src.services.dynamodb import DynamoDB
 from src.util.config import TEAM_TABLE_NAME, TEAM_TABLE_CONFERENCE_INDEX, TEAM_TABLE_DIVISION_INDEX, \
     TEAM_TABLE_NAME_INDEX
+from src.util.cors_decorator import cors
 from src.util.process_data_util import convert_decimals
 
 dynamodb = DynamoDB(TEAM_TABLE_NAME)
 
-
+@cors(origin="*")
 def handler(event, context):
     print(event)
     try:
@@ -55,7 +56,7 @@ def handler(event, context):
 
         return {
             "statusCode": 200,
-            "body": json.dumps(results)
+            "body": json.dumps(prepare_results(results))
         }
 
     except Exception as e:
@@ -64,3 +65,12 @@ def handler(event, context):
             "statusCode": 500,
             "body": json.dumps({"error": "Internal Server Error"})
         }
+
+
+def prepare_results(data):
+    results = []
+    for team in data:
+        results.append({"team": team["team_name"], "win_count": team["win_count"], "loss_count": team["loss_count"],
+                        "game_count": team["game_count"], "division": team["division"],
+                        "abbreviation": team["abbreviation"]})
+    return sorted(results, key=lambda x: x["win_count"] / x["game_count"], reverse=True)

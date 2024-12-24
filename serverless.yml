@@ -12,12 +12,13 @@ provider:
           Ref: GameResultsTable
     TEAM_TABLE_NAME:
       Ref: TeamsTable
-    NORMALIZE_GAME_QUEUE_URL:
-      Ref: NormalizeGameQueue
+    PLAYER_TABLE_NAME:
+      Ref: PlayerTable
     GAME_TABLE_INDEX: DateIndex
     TEAM_TABLE_NAME_INDEX: TeamNameIndex
     TEAM_TABLE_CONFERENCE_INDEX: ConferenceIndex
     TEAM_TABLE_DIVISION_INDEX: DivisionIndex
+    PLAYER_TABLE_INDEX: TeamSeasonIndex
 
   iam:
     role:
@@ -35,6 +36,7 @@ provider:
             - dynamodb:GetItem
             - dynamodb:DeleteItem
             - dynamodb:Query
+            - dynamodb:Scan
           Resource: "*"
         - Effect: Allow
           Action:
@@ -46,21 +48,6 @@ plugins:
   - serverless-python-requirements
 
 functions:
-#  saveDailyResultsBDL:
-#    handler: src/handlers/save_daily_results_bdl.handler
-#    timeout: 15
-#    events:
-#      - schedule:
-#          rate: cron(0 10 * * ? *)
-
-  processBDLGame:
-    handler: src/handlers/process_bdl_game_data.handler
-    events:
-      - sqs:
-          arn:
-            Fn::GetAtt: [ BDLGameQueue, Arn ]
-          batchSize: 5
-
   processNBAAPIGame:
     handler: src/handlers/process_nba_api_game_data.handler
     events:
@@ -69,27 +56,25 @@ functions:
             Fn::GetAtt: [ NBAAPIGameQueue, Arn ]
           batchSize: 5
 
-  processNormalizeGameResult:
-    handler: src/handlers/process_normalize_game.handler
-    events:
-      - sqs:
-          arn:
-            Fn::GetAtt: [ NormalizeGameQueue, Arn ]
-          batchSize: 5
-
   getGamesByDate:
     handler: src/handlers/get_games_by_date.handler
     events:
       - http:
           path: games
           method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+            allowCredentials: false
           request:
             parameters:
               querystrings:
                 date: true
 
   processUnifiedGame:
-    handler: src/handlers/process_unified_game_data.handler
+    handler: src/handlers/process_game_data.handler
     events:
       - stream:
           type: dynamodb
@@ -103,6 +88,32 @@ functions:
       - http:
           path: teams
           method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+            allowCredentials: false
+
+  getLeaders:
+    handler: src/handlers/get_leaders.handler
+    events:
+      - http:
+          path: leaders
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+            allowCredentials: false
+          request:
+            parameters:
+              querystrings:
+                category: true
+                season: true
+                teamName: false
+                limit: false
 
   
 custom:
@@ -136,28 +147,12 @@ resources:
         TopicName: FanoutTopic
 
     # SQS Queues
-    BDLGameQueue:
-      Type: AWS::SQS::Queue
-      Properties:
-        QueueName: BDLGameQueue
     NBAAPIGameQueue:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: NBAAPIGameQueue
 
     # SQS Subscriptions to SNS
-    BDLGameQueueSub:
-      Type: AWS::SNS::Subscription
-      Properties:
-        TopicArn:
-          Ref: FanoutTopic
-        Protocol: sqs
-        Endpoint:
-          Fn::GetAtt: [ BDLGameQueue, Arn ]
-        FilterPolicy:
-          source:
-            - BallDontLie
-
     NBAAPIQueueSub:
       Type: AWS::SNS::Subscription
       Properties:
@@ -171,24 +166,6 @@ resources:
             - NBA_API
 
     # Allow SQS to Receive Messages from SNS
-    BDLGameQueuePolicy:
-      Type: AWS::SQS::QueuePolicy
-      Properties:
-        Queues:
-          - Ref: BDLGameQueue
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Principal: "*"
-              Action: "sqs:SendMessage"
-              Resource:
-                Fn::GetAtt: [ BDLGameQueue, Arn ]
-              Condition:
-                ArnEquals:
-                  aws:SourceArn:
-                    Ref: FanoutTopic
-
     NBAAPIQueuePolicy:
       Type: AWS::SQS::QueuePolicy
       Properties:
@@ -279,6 +256,31 @@ resources:
           - IndexName: ConferenceIndex
             KeySchema:
               - AttributeName: conference
+                KeyType: HASH
+              - AttributeName: season
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+
+    PlayerTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Players
+        AttributeDefinitions:
+          - AttributeName: player_id
+            AttributeType: S
+          - AttributeName: team_name
+            AttributeType: S
+          - AttributeName: season
+            AttributeType: N
+        KeySchema:
+          - AttributeName: player_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: TeamSeasonIndex
+            KeySchema:
+              - AttributeName: team_name
                 KeyType: HASH
               - AttributeName: season
                 KeyType: RANGE

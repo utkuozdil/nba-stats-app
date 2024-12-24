@@ -37,3 +37,16 @@ class DynamoDB:
         with self.table.batch_writer() as batch:
             for game in data:
                 batch.delete_item(Key={"game_id": game.game_id, "date": game.date})
+
+    def get_all_items(self, scan_params=None):
+        try:
+            items = []
+            scan_params = scan_params or {}
+
+            response = self.table.scan(**scan_params)
+            items.extend(response.get("Items", []))
+            return items
+        except Exception as e:
+            print(f"Error retrieving all items: {str(e)}")
+            raise
+

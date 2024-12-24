@@ -47,25 +47,36 @@ class NBAAPIDataExtractor:
             visitor_line_score = list(filter(lambda element: element["TEAM_ID"] == visitor_team_id, line_score_data))[0]
             visitor_team = self._get_team_data(visitor_line_score, team_data)
 
-            game_id = "_".join([self._format_date(value.get("GAME_DATE_EST")),
-                                home_line_score["TEAM_ABBREVIATION"],
-                                visitor_line_score["TEAM_ABBREVIATION"],
-                                "NBA_API"
-                                ])
-
             game = Game(
                 home_team=home_team, visitor_team=visitor_team,
                 home_team_score=home_line_score.get("PTS"),
                 visitor_team_score=visitor_line_score.get("PTS"),
                 date=self._format_date(value.get("GAME_DATE_EST")),
                 season=value.get("SEASON"),
-                game_id=game_id,
+                game_id=key,
                 source="NBA_API"
             )
             extracted_games.append(game)
 
         print(extracted_games)
         return extracted_games
+
+    def extract_game_ids(self):
+        extracted_game_ids = []
+        game_header = None
+
+        for result_set in self.data["resultSets"]:
+            if result_set["name"] == "GameHeader":
+                game_header = result_set
+
+        if not game_header:
+            return extracted_game_ids
+
+        game_header_map = self._prepare_game_header_map(game_header)
+        if len(game_header_map) > 0:
+            return {"game_ids": list(game_header_map.keys()), "season": list(game_header_map.values())[0].get("SEASON")}
+        else:
+            return None
 
     def _format_date(self, date_string):
         date_obj = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S')
@@ -110,7 +121,7 @@ class NBAAPIDataExtractor:
                         city=selected_line_score["TEAM_CITY_NAME"],
                         name=selected_line_score["TEAM_NAME"],
                         full_name=" ".join([selected_line_score["TEAM_CITY_NAME"],
-                                        selected_line_score["TEAM_NAME"]]),
+                                            selected_line_score["TEAM_NAME"]]),
                         abbreviation=selected_line_score["TEAM_ABBREVIATION"]
                         )
         return team
