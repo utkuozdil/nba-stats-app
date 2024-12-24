@@ -82,6 +82,10 @@ paths:
               - assists
               - blocks
               - steals
+              - field_goal_percentage
+              - free_throw_percentage
+              - three_point_percentage
+              - minutes_played
         - name: season
           in: query
           required: false
