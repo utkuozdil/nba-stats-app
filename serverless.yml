@@ -1,0 +1,290 @@
+service: nba-stats-app
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  memorySize: 1024
+  environment:
+    SNS_TOPIC_ARN:
+      Ref: FanoutTopic
+    GAME_TABLE_NAME:
+          Ref: GameResultsTable
+    TEAM_TABLE_NAME:
+      Ref: TeamsTable
+    PLAYER_TABLE_NAME:
+      Ref: PlayerTable
+    GAME_TABLE_INDEX: DateIndex
+    TEAM_TABLE_NAME_INDEX: TeamNameIndex
+    TEAM_TABLE_CONFERENCE_INDEX: ConferenceIndex
+    TEAM_TABLE_DIVISION_INDEX: DivisionIndex
+    PLAYER_TABLE_INDEX: TeamSeasonIndex
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:ListBucket
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:BatchWriteItem
+            - dynamodb:GetItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - sqs:*
+            - sns:*
+          Resource: "*"
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-python-requirements
+
+functions:
+  processNBAAPIGame:
+    handler: src/handlers/process_nba_api_game_data.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [ NBAAPIGameQueue, Arn ]
+          batchSize: 5
+
+  getGamesByDate:
+    handler: src/handlers/get_games_by_date.handler
+    events:
+      - http:
+          path: games
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+            allowCredentials: false
+          request:
+            parameters:
+              querystrings:
+                date: true
+
+  processUnifiedGame:
+    handler: src/handlers/process_game_data.handler
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [ GameResultsTable, StreamArn ]
+          batchSize: 5
+
+  getTeams:
+    handler: src/handlers/get_teams.handler
+    events:
+      - http:
+          path: teams
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+            allowCredentials: false
+
+  getLeaders:
+    handler: src/handlers/get_leaders.handler
+    events:
+      - http:
+          path: leaders
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+            allowCredentials: false
+          request:
+            parameters:
+              querystrings:
+                category: true
+                season: true
+                teamName: false
+                limit: false
+
+  
+custom:
+  pythonRequirements:
+    dockerizePip: true    # Ensures compatibility with Lambda runtime
+    slim: true            # Reduces package size
+    strip: false          # Keep debug symbols for better error logs
+
+package:
+  exclude:
+    - node_modules/**
+    - venv/**             # Exclude virtual environment
+    - .pytest_cache/**    # Exclude pytest cache
+    - tests/**            # Exclude tests
+    - .venv/**
+    - .serverless/**
+  include:
+    - src/**              # Include application source files
+    - requirements.txt
+
+resources:
+  Resources:
+    NBAStatsS3Bucket:    # Logical resource name
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: daily-nba-game-results  # S3 bucket name
+    # SNS Topic
+    FanoutTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: FanoutTopic
+
+    # SQS Queues
+    NBAAPIGameQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: NBAAPIGameQueue
+
+    # SQS Subscriptions to SNS
+    NBAAPIQueueSub:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn:
+          Ref: FanoutTopic
+        Protocol: sqs
+        Endpoint:
+          Fn::GetAtt: [ NBAAPIGameQueue, Arn ]
+        FilterPolicy:
+          source:
+            - NBA_API
+
+    # Allow SQS to Receive Messages from SNS
+    NBAAPIQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - Ref: NBAAPIGameQueue
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: "*"
+              Action: "sqs:SendMessage"
+              Resource:
+                Fn::GetAtt: [ NBAAPIGameQueue, Arn ]
+              Condition:
+                ArnEquals:
+                  aws:SourceArn:
+                    Ref: FanoutTopic
+
+    GameResultsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: GameResults
+        AttributeDefinitions:
+          - AttributeName: game_id
+            AttributeType: S
+          - AttributeName: date
+            AttributeType: S
+        KeySchema:
+          - AttributeName: game_id
+            KeyType: HASH
+          - AttributeName: date
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        GlobalSecondaryIndexes:
+          - IndexName: DateIndex
+            KeySchema:
+              - AttributeName: date
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+
+    NormalizeGameQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: NormalizeGameQueue
+        VisibilityTimeout: 10
+
+
+    TeamsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Teams
+        AttributeDefinitions:
+          - AttributeName: team_id
+            AttributeType: S
+          - AttributeName: season
+            AttributeType: N
+          - AttributeName: team_name
+            AttributeType: S
+          - AttributeName: division
+            AttributeType: S
+          - AttributeName: conference
+            AttributeType: S
+        KeySchema:
+          - AttributeName: team_id
+            KeyType: HASH
+          - AttributeName: season
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: TeamNameIndex
+            KeySchema:
+              - AttributeName: team_name
+                KeyType: HASH
+              - AttributeName: season
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: DivisionIndex
+            KeySchema:
+              - AttributeName: division
+                KeyType: HASH
+              - AttributeName: season
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: ConferenceIndex
+            KeySchema:
+              - AttributeName: conference
+                KeyType: HASH
+              - AttributeName: season
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+
+    PlayerTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Players
+        AttributeDefinitions:
+          - AttributeName: player_id
+            AttributeType: S
+          - AttributeName: team_name
+            AttributeType: S
+          - AttributeName: season
+            AttributeType: N
+        KeySchema:
+          - AttributeName: player_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: TeamSeasonIndex
+            KeySchema:
+              - AttributeName: team_name
+                KeyType: HASH
+              - AttributeName: season
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST
+

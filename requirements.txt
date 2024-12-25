@@ -1,0 +1,4 @@
+python-dotenv~=1.0.1
+pydantic~=2.10.4
+balldontlie~=0.1.4
+nba_api~=1.6.1

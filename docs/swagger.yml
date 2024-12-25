@@ -1,0 +1,244 @@
+openapi: 3.0.1
+info:
+  title: NBA Games API
+  description: API for retrieving NBA games by date
+  version: 1.0.0
+paths:
+  /games:
+    get:
+      summary: Get NBA games by date
+      description: Retrieve NBA game results for a given date.
+      parameters:
+        - name: date
+          in: query
+          description: "The date of the games to retrieve (format: YYYY-MM-DD)".
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        200:
+          description: A list of NBA games for the given date.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    game_id:
+                      type: string
+                      description: Unique game identifier.
+                    date:
+                      type: string
+                      format: date
+                      description: Date of the game.
+                    home_team:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        abbreviation:
+                          type: string
+                        conference:
+                          type: string
+                        division:
+                          type: string
+                    visitor_team:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        abbreviation:
+                          type: string
+                        conference:
+                          type: string
+                        division:
+                          type: string
+                    home_team_score:
+                      type: integer
+                      description: Score of the home team.
+                    visitor_team_score:
+                      type: integer
+                      description: Score of the visitor team.
+        400:
+          description: Missing or invalid date query parameter.
+        500:
+          description: Internal server error.
+  /leaders:
+    get:
+      summary: Get Player Leaders
+      description: Fetch top players based on specified category, season, and team.
+      parameters:
+        - name: category
+          in: query
+          required: true
+          description: The category to fetch leaders for. Must be one of `points`, `rebounds`, `assists`, `blocks`, `steals`.
+          schema:
+            type: string
+            enum:
+              - points
+              - rebounds
+              - assists
+              - blocks
+              - steals
+              - field_goal_percentage
+              - free_throw_percentage
+              - three_point_percentage
+              - minutes_played
+        - name: season
+          in: query
+          required: false
+          description: The season year to filter players by.
+          schema:
+            type: integer
+        - name: teamName
+          in: query
+          required: false
+          description: The team name to filter players by.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: The maximum number of players to return.
+          schema:
+            type: integer
+            default: 10
+        - name: type
+          in: query
+          required: false
+          description: Whether to fetch based on total or average values. Default is `average`.
+          schema:
+            type: string
+            enum:
+              - average
+              - total
+            default: "average"
+      responses:
+        '200':
+          description: A list of top player leaders.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  leaders:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        player_name:
+                          type: string
+                          description: The name of the player.
+                        team_name:
+                          type: string
+                          description: The name of the team the player belongs to.
+                        point_count:
+                          type: number
+                          format: float
+                          description: The points for the player. This will vary depending on the category requested.
+        '400':
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+  /teams:
+    get:
+      summary: Get teams by filter
+      description: Retrieve teams filtered by conference, division, or team name for
+        a given season.
+      parameters:
+        - name: season
+          in: query
+          description: The season year (e.g., 2024). This parameter is required.
+          required: true
+          schema:
+            type: integer
+        - name: conference
+          in: query
+          description: The conference to filter by (e.g., 'East', 'West'). Provide exactly
+            one of 'conference', 'division', or 'team_name'.
+          required: false
+          schema:
+            type: string
+        - name: division
+          in: query
+          description: The division to filter by (e.g., 'Atlantic', 'Pacific'). Provide
+            exactly one of 'conference', 'division', or 'team_name'.
+          required: false
+          schema:
+            type: string
+        - name: team_name
+          in: query
+          description: The team name to filter by (e.g., 'Lakers'). Provide exactly
+            one of 'conference', 'division', or 'team_name'.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with filtered teams.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  teams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        team:
+                          type: string
+                          description: The name of the team.
+                        win_count:
+                          type: integer
+                          description: The number of wins the team has.
+                        loss_count:
+                          type: integer
+                          description: The number of losses the team has.
+                        game_count:
+                          type: integer
+                          description: The total number of games played by the team.
+                        division:
+                          type: string
+                          description: The division of the team.
+                        abbreviation:
+                          type: string
+                          description: The team's abbreviation.
+        '400':
+          description: Bad Request. The client has sent an invalid request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the problem.
+        '500':
+          description: Internal Server Error. Something went wrong on the server.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the problem.
