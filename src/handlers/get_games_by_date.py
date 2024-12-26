@@ -1,8 +1,8 @@
 import json
-from src.services.dynamodb import DynamoDB
-from src.util.config import GAME_TABLE_NAME, GAME_TABLE_INDEX
-from src.util.cors_decorator import cors
-from src.util.process_data_util import convert_decimals
+from src.services.aws.dynamodb import DynamoDB
+from src.utility.util.config import GAME_TABLE_NAME, GAME_TABLE_INDEX
+from src.utility.decorator.cors_decorator import cors
+from src.utility.util.process_data_util import convert_decimals
 
 dynamodb = DynamoDB(GAME_TABLE_NAME)
 

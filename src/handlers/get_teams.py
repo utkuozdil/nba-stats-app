@@ -1,9 +1,9 @@
 import json
-from src.services.dynamodb import DynamoDB
-from src.util.config import TEAM_TABLE_NAME, TEAM_TABLE_CONFERENCE_INDEX, TEAM_TABLE_DIVISION_INDEX, \
+from src.services.aws.dynamodb import DynamoDB
+from src.utility.util.config import TEAM_TABLE_NAME, TEAM_TABLE_CONFERENCE_INDEX, TEAM_TABLE_DIVISION_INDEX, \
     TEAM_TABLE_NAME_INDEX
-from src.util.cors_decorator import cors
-from src.util.process_data_util import convert_decimals
+from src.utility.decorator.cors_decorator import cors
+from src.utility.util.process_data_util import convert_decimals
 
 dynamodb = DynamoDB(TEAM_TABLE_NAME)
 

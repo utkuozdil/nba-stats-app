@@ -16,3 +16,7 @@ class Team(BaseModel):
     win_count: int
     loss_count: int
     game_ids: Set[str] = set()
+    home_win_count: int
+    home_loss_count: int
+    visitor_win_count: int
+    visitor_loss_count: int 

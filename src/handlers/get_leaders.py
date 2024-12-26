@@ -1,10 +1,10 @@
 import json
 import traceback
 
-from src.services.dynamodb import DynamoDB
-from src.util.config import PLAYER_TABLE_NAME
-from src.util.cors_decorator import cors
-from src.util.process_data_util import convert_decimals
+from src.services.aws.dynamodb import DynamoDB
+from src.utility.util.config import PLAYER_TABLE_NAME
+from src.utility.decorator.cors_decorator import cors
+from src.utility.util.process_data_util import convert_decimals
 
 dynamodb = DynamoDB(PLAYER_TABLE_NAME)
 
