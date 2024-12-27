@@ -242,3 +242,71 @@ paths:
                   error:
                     type: string
                     description: Error message describing the problem.
+  /advanced-stats:
+    get:
+      summary: Get Advanced Player Statistics
+      description: Retrieve advanced player statistics filtered by category, season, and team.
+      parameters:
+        - name: category
+          in: query
+          required: true
+          description: The category to fetch statistics for
+          schema:
+            type: string
+            enum:
+              - ts_percentage
+              - efg_percentage
+              - usage_rate
+              - off_rating
+              - def_rating
+              - net_rating
+        - name: season
+          in: query
+          required: false
+          description: The season year to filter by
+          schema:
+            type: integer
+        - name: teamName
+          in: query
+          required: false
+          description: The team name to filter by
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of players with their advanced statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  leaders:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        player_name:
+                          type: string
+                        team_name:
+                          type: string
+                        value:
+                          type: number
+                          format: decimal
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

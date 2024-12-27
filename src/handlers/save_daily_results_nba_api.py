@@ -1,8 +1,8 @@
 from src.integrations.nbacom import NbaCom
-from src.services.s3 import S3
-from src.services.sns import SNS
-from src.util.config import BUCKET_NAME, SNS_TOPIC_ARN
-from src.util.date_util import get_yesterday_date_str
+from src.services.aws.s3 import S3
+from src.services.aws.sns import SNS
+from src.utility.util.config import BUCKET_NAME, SNS_TOPIC_ARN
+from src.utility.util.date_util import get_yesterday_date_str
 
 nbaAPI = NbaCom()
 s3 = S3(BUCKET_NAME)

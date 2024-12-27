@@ -14,11 +14,14 @@ provider:
       Ref: TeamsTable
     PLAYER_TABLE_NAME:
       Ref: PlayerTable
+    PLAYER_ADVANCED_TABLE_NAME:
+      Ref: PlayerAdvancedTable
     GAME_TABLE_INDEX: DateIndex
     TEAM_TABLE_NAME_INDEX: TeamNameIndex
     TEAM_TABLE_CONFERENCE_INDEX: ConferenceIndex
     TEAM_TABLE_DIVISION_INDEX: DivisionIndex
     PLAYER_TABLE_INDEX: TeamSeasonIndex
+    PLAYER_ADVANCED_TABLE_INDEX: TeamSeasonIndex
 
   iam:
     role:
@@ -114,6 +117,18 @@ functions:
                 season: true
                 teamName: false
                 limit: false
+  
+  getAdvancedStats:
+    handler: src/handlers/get_advanced_stats.handler
+    events:
+      - http:
+          path: advanced-stats
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
 
   
 custom:
@@ -277,6 +292,8 @@ resources:
         KeySchema:
           - AttributeName: player_id
             KeyType: HASH
+          - AttributeName: season
+            KeyType: RANGE
         GlobalSecondaryIndexes:
           - IndexName: TeamSeasonIndex
             KeySchema:
@@ -288,3 +305,29 @@ resources:
               ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
 
+    PlayerAdvancedTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: PlayersAdvanced
+        AttributeDefinitions:
+          - AttributeName: player_id
+            AttributeType: S
+          - AttributeName: team_name
+            AttributeType: S
+          - AttributeName: season
+            AttributeType: N
+        KeySchema:
+          - AttributeName: player_id
+            KeyType: HASH
+          - AttributeName: season
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: TeamSeasonIndex
+            KeySchema:
+              - AttributeName: team_name
+                KeyType: HASH
+              - AttributeName: season
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        BillingMode: PAY_PER_REQUEST

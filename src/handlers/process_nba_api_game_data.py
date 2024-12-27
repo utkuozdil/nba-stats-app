@@ -1,11 +1,11 @@
 import json
 import traceback
 
-from src.services.dynamodb import DynamoDB
-from src.services.s3 import S3
-from src.util.config import BUCKET_NAME, GAME_TABLE_NAME, GAME_TABLE_INDEX
-from src.util.nba_api_game_data_extractor import NBAAPIDataExtractor
-from src.util.process_data_util import filter_games
+from src.services.aws.dynamodb import DynamoDB
+from src.services.aws.s3 import S3
+from src.utility.util.config import BUCKET_NAME, GAME_TABLE_NAME, GAME_TABLE_INDEX
+from src.utility.extractor.nba_api_game_data_extractor import NBAAPIDataExtractor
+from src.utility.util.process_data_util import filter_games
 
 s3 = S3(BUCKET_NAME)
 dynamodb = DynamoDB(GAME_TABLE_NAME)

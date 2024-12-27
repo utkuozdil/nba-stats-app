@@ -1,4 +1,4 @@
-nba_divisions = {
+NBA_DIVISIONS = {
     "ATL": "Southeast",
     "BOS": "Atlantic",
     "BKN": "Atlantic",

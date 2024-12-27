@@ -1,8 +1,9 @@
 from src.model.game.game import Game
 from src.model.game.teamdata import TeamData
 from src.model.team.team import Team
-from src.services.dynamodb import DynamoDB
-from src.util.config import TEAM_TABLE_NAME, TEAM_TABLE_NAME_INDEX
+from src.services.aws.dynamodb import DynamoDB
+from src.utility.extractor.nba_api_team_data_extractor import NBAAPITeamDataExtractor
+from src.utility.util.config import TEAM_TABLE_NAME, TEAM_TABLE_NAME_INDEX
 
 dynamodb = DynamoDB(TEAM_TABLE_NAME)
 
@@ -20,10 +21,10 @@ def handler(event, context):
 
                     home_team = update_team_data(game.home_team, game.season,
                                                  game.home_team_score > game.visitor_team_score,
-                                                 game_data.get("game_id"))
+                                                 game_data.get("game_id"), False)
                     visitor_team = update_team_data(game.visitor_team, game.season,
                                                     game.visitor_team_score > game.home_team_score,
-                                                    game_data.get("game_id"))
+                                                    game_data.get("game_id"), True)
 
                     dynamodb.save_batch([home_team, visitor_team])
     except Exception as e:
@@ -44,22 +45,12 @@ def parse_dynamodb_item(dynamodb_item):
         return None
 
 
-def update_team_data(team_data: TeamData, season: int, is_win: bool, game_id: str):
+def update_team_data(team_data: TeamData, season: int, is_win: bool, game_id: str, is_visitor: bool):
     teams = dynamodb.get_by_index_value(index_name=TEAM_TABLE_NAME_INDEX, key="team_name",
                                         value=team_data.full_name, sort_key="season",
                                         sort_value=season)
-    if len(teams) > 0:
-        team = Team.model_validate(teams[0])
-        if game_id not in team.game_ids:
-            team.game_count += 1
-            if is_win:
-                team.win_count += 1
-            else:
-                team.loss_count += 1
-            team.game_ids.add(game_id)
-    else:
-        team = Team(team_id=team_data.abbreviation, season=season, team_name=team_data.full_name,
-                    conference=team_data.conference, division=team_data.division,
-                    abbreviation=team_data.abbreviation, city=team_data.city, name=team_data.name, game_count=1,
-                    win_count=1 if is_win else 0, loss_count=0 if is_win else 1, game_ids={game_id})
+    
+    nba_api_team_data_extractor = NBAAPITeamDataExtractor(teams, season, game_id)
+    team = nba_api_team_data_extractor.extract_team_data(is_win, team_data, is_visitor)
+    
     return team
