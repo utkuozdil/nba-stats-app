@@ -21,10 +21,10 @@ def handler(event, context):
 
                     home_team = update_team_data(game.home_team, game.season,
                                                  game.home_team_score > game.visitor_team_score,
-                                                 game_data.get("game_id"))
+                                                 game_data.get("game_id"), False)
                     visitor_team = update_team_data(game.visitor_team, game.season,
                                                     game.visitor_team_score > game.home_team_score,
-                                                    game_data.get("game_id"))
+                                                    game_data.get("game_id"), True)
 
                     dynamodb.save_batch([home_team, visitor_team])
     except Exception as e:

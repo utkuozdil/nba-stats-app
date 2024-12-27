@@ -18,12 +18,12 @@ key_map = {
 }
 
 MINIMUM_ATTEMPTS = {
-    "ts_percentage": {"key": "total_attempts", "threshold": 50},
-    "efg_percentage": {"key": "total_attempts", "threshold": 50},
-    "usage_rate": {"key": "minutes_played_as_float", "threshold": 200},
-    "off_rating": {"key": "minutes_played_as_float", "threshold": 200},
-    "def_rating": {"key": "minutes_played_as_float", "threshold": 200},
-    "net_rating": {"key": "minutes_played_as_float", "threshold": 200}
+    "ts_percentage": {"key": "total_attempts", "threshold": 200},
+    "efg_percentage": {"key": "total_attempts", "threshold": 200},
+    "usage_rate": {"key": "total_attempts", "threshold": 200},
+    "off_rating": {"key": "total_attempts", "threshold": 200},
+    "def_rating": {"key": "total_attempts", "threshold": 200},
+    "net_rating": {"key": "total_attempts", "threshold": 200}
 }
 
 
@@ -122,7 +122,7 @@ def prepare_data(data):
 
 def prepare_result(data, category_name):
     result = []
-    for inner in data[:10]:  # Limit to top 10 players
+    for inner in data:  # Limit to top 10 players
         result.append({
             "player_name": inner.get("player_name"),
             "team_name": inner.get("team_name"),

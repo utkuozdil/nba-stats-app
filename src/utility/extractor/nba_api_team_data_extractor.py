@@ -7,7 +7,7 @@ from src.model.team.team import Team
 class NBAAPITeamDataExtractor:
 
     def __init__(self, data, season, game_id):
-        self.data = json.loads(data)
+        self.data = json.loads(data) if isinstance(data, str) else data
         self.season = season
         self.game_id = game_id
 
