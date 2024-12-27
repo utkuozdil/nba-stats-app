@@ -4,7 +4,7 @@ from src.utility.populator.player_populator import PlayerPopulator
 
 
 start_date = "2024-10-22"
-end_date = "2024-12-26"
+end_date = "2024-12-27"
 
 game_and_team_populator = GameAndTeamPopulator(start_date=start_date, end_date=end_date)
 game_and_team_populator.populate_data()
